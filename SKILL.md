@@ -31,10 +31,10 @@ Chrome/Edge v127+ 使用了 app-bound 加密，yt-dlp 自带的 `--cookies-from-
 
 ## 设置下载目录
 
-所有下载的文件会存放在 `D:\Agent\Bilibili\` 下，每个视频单独一个文件夹：
+所有下载的文件统一存放在 `OUTPUT_BASE` 下，每个视频单独一个文件夹：
 
 ```
-D:\Agent\Bilibili\
+{OUTPUT_BASE}\
 ├── 6 小时 Vibe Coding 全记录 [BV1ASRjBxEVx]/
 │   └── 6 小时 Vibe Coding 全记录 [BV1ASRjBxEVx].mp4
 ├── 我的世界生存 EP01 [BV1xx...]/
@@ -44,7 +44,19 @@ D:\Agent\Bilibili\
     └── 02 - 得遇仙缘 [BV3xx...].mp4
 ```
 
-如果需要修改目录，替换下面所有命令中 `D:/Agent/Bilibili` 为你想要的路径。
+`OUTPUT_BASE` 按以下规则确定：
+- 优先使用 `D:\Agent\Bilibili`（D 盘存在且有写入权限时）
+- 回退到 `C:\Users\<当前用户名>\Agent\Bilibili`
+
+在执行下载前，先创建好目录：
+```bash
+# 创建下载目录
+mkdir -p "D:/Agent/Bilibili" 2>/dev/null || mkdir -p "$HOME/Agent/Bilibili"
+# 创建 cookie 存放目录（如果无 D 盘）
+mkdir -p "D:/Agent" 2>/dev/null || mkdir -p "$HOME/Agent"
+```
+
+下面命令中使用 `{OUTPUT_BASE}` 代表选定的路径，实际执行时替换为真实路径。
 
 ## Prerequisites
 
@@ -69,6 +81,12 @@ export PATH="/c/Users/$USER/AppData/Local/Microsoft/WinGet/Links:/c/Users/$USER/
 ## Download Commands
 
 > 所有命令都需要 PATH 配置和（如果需要 1080P）有效的 cookie 文件。
+>
+> 执行前根据你的环境替换 `{OUTPUT_BASE}`：
+> - **有 D 盘** → `D:/Agent/Bilibili`
+> - **无 D 盘** → `C:/Users/<你的用户名>/Agent/Bilibili`
+>
+> cookie 文件固定存放在 `D:\Agent\bilibili_cookies.txt`，无 D 盘则放 `C:\Users\<你的用户名>\Agent\bilibili_cookies.txt`。
 
 ### Single video
 
@@ -81,7 +99,7 @@ yt-dlp \
   --merge-output-format mp4 \
   --concurrent-fragments 4 \
   --retries 5 \
-  -o "D:/Agent/Bilibili/%(title)s [%(id)s]/%(title)s [%(id)s].%(ext)s" \
+  -o "{OUTPUT_BASE}/%(title)s [%(id)s]/%(title)s [%(id)s].%(ext)s" \
   "https://www.bilibili.com/video/BVxxxx"
 ```
 
@@ -102,7 +120,7 @@ yt-dlp \
   --merge-output-format mp4 \
   --concurrent-fragments 4 \
   --retries 5 \
-  -o "D:/Agent/Bilibili/%(playlist_title)s [%(playlist_id)s]/%(playlist_index)02d - %(title)s [%(id)s].%(ext)s" \
+  -o "{OUTPUT_BASE}/%(playlist_title)s [%(playlist_id)s]/%(playlist_index)02d - %(title)s [%(id)s].%(ext)s" \
   "https://space.bilibili.com/UID/lists/SID?type=season"
 ```
 
@@ -129,7 +147,7 @@ Same as single video — yt-dlp auto-detects `anthology` and iterates. The `%(pl
 yt-dlp occasionally fails to auto-merge and leaves `.f<vid>.mp4` + `.f<aid>.m4a` files. Fix manually with ffmpeg (注意替换为实际视频文件夹路径）：
 
 ```bash
-cd "D:/Agent/Bilibili/视频标题 [BVxxxxxx]"
+cd "{OUTPUT_BASE}/视频标题 [BVxxxxxx]"
 ffmpeg -y -i "视频标题 [BVxxxxxx].f30080.mp4" -i "视频标题 [BVxxxxxx].f30280.m4a" \
   -c copy -map 0:v:0 -map 1:a:0 "视频标题 [BVxxxxxx].mp4"
 rm "*.f30080.mp4" "*.f30280.m4a"
