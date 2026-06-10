@@ -29,6 +29,23 @@ Chrome/Edge v127+ 使用了 app-bound 加密，yt-dlp 自带的 `--cookies-from-
 
 > cookie 文件包含有效登录会话，请勿提交到 git 或分享给他人。
 
+## 设置下载目录
+
+所有下载的文件会存放在 `D:\Agent\Bilibili\` 下，每个视频单独一个文件夹：
+
+```
+D:\Agent\Bilibili\
+├── 6 小时 Vibe Coding 全记录 [BV1ASRjBxEVx]/
+│   └── 6 小时 Vibe Coding 全记录 [BV1ASRjBxEVx].mp4
+├── 我的世界生存 EP01 [BV1xx...]/
+│   └── 我的世界生存 EP01 [BV1xx...].mp4
+└── 凡人修仙传 [season_xxxxxx]/          # 合集/剧集
+    └── 01 - 初入修仙 [BV2xx...].mp4
+    └── 02 - 得遇仙缘 [BV3xx...].mp4
+```
+
+如果需要修改目录，替换下面所有命令中 `D:/Agent/Bilibili` 为你想要的路径。
+
 ## Prerequisites
 
 ### 1. Install yt-dlp + ffmpeg (Windows)
@@ -64,7 +81,7 @@ yt-dlp \
   --merge-output-format mp4 \
   --concurrent-fragments 4 \
   --retries 5 \
-  -o "D:/Agent/%(title)s [%(id)s].%(ext)s" \
+  -o "D:/Agent/Bilibili/%(title)s [%(id)s]/%(title)s [%(id)s].%(ext)s" \
   "https://www.bilibili.com/video/BVxxxx"
 ```
 
@@ -85,7 +102,7 @@ yt-dlp \
   --merge-output-format mp4 \
   --concurrent-fragments 4 \
   --retries 5 \
-  -o "D:/Agent/%(playlist_index)02d - %(title)s [%(id)s].%(ext)s" \
+  -o "D:/Agent/Bilibili/%(playlist_title)s [%(playlist_id)s]/%(playlist_index)02d - %(title)s [%(id)s].%(ext)s" \
   "https://space.bilibili.com/UID/lists/SID?type=season"
 ```
 
@@ -109,13 +126,13 @@ Same as single video — yt-dlp auto-detects `anthology` and iterates. The `%(pl
 
 ## Post-Download: Fix Broken Merges
 
-yt-dlp occasionally fails to auto-merge and leaves `.f<vid>.mp4` + `.f<aid>.m4a` files. Fix manually with ffmpeg:
+yt-dlp occasionally fails to auto-merge and leaves `.f<vid>.mp4` + `.f<aid>.m4a` files. Fix manually with ffmpeg (注意替换为实际视频文件夹路径）：
 
 ```bash
-cd /d/Agent
-ffmpeg -y -i "VIDEO.f30080.mp4" -i "VIDEO.f30280.m4a" \
-  -c copy -map 0:v:0 -map 1:a:0 "VIDEO.mp4"
-rm "VIDEO.f30080.mp4" "VIDEO.f30280.m4a"
+cd "D:/Agent/Bilibili/视频标题 [BVxxxxxx]"
+ffmpeg -y -i "视频标题 [BVxxxxxx].f30080.mp4" -i "视频标题 [BVxxxxxx].f30280.m4a" \
+  -c copy -map 0:v:0 -map 1:a:0 "视频标题 [BVxxxxxx].mp4"
+rm "*.f30080.mp4" "*.f30280.m4a"
 ```
 
 ## Troubleshooting
